@@ -16,6 +16,22 @@ DEFAULT_FILE = "Qwen2-0.5B-Instruct-Q8_0.gguf"
 DEFAULT_DIR = "models/chat"
 
 
+def is_valid_gguf(path: str) -> bool:
+    try:
+        with open(path, "rb") as f:
+            return f.read(4) == b"GGUF"
+    except OSError:
+        return False
+
+
+def is_git_lfs_pointer(path: str) -> bool:
+    try:
+        with open(path, "rb") as f:
+            return f.read(64).startswith(b"version https://git-lfs.github.com/spec/")
+    except OSError:
+        return False
+
+
 def get_modelscope_download_url(repo: str, filename: str) -> str:
     return f"https://modelscope.cn/models/{repo}/resolve/master/{filename}"
 
@@ -59,8 +75,12 @@ def main():
 
     if os.path.exists(dest):
         size_mb = os.path.getsize(dest) / (1024 * 1024)
-        print(f"Model already exists: {dest} ({size_mb:.1f} MB)")
-        return 0
+        if is_valid_gguf(dest):
+            print(f"Model already exists: {dest} ({size_mb:.1f} MB)")
+            return 0
+        reason = "Git LFS pointer" if is_git_lfs_pointer(dest) else "invalid GGUF file"
+        print(f"Replacing {reason}: {dest} ({size_mb:.1f} MB)")
+        os.remove(dest)
 
     url = get_modelscope_download_url(args.repo, args.remote_file)
     try:
@@ -70,6 +90,9 @@ def main():
         return 1
 
     size_mb = os.path.getsize(dest) / (1024 * 1024)
+    if not is_valid_gguf(dest):
+        print(f"Downloaded file is not a valid GGUF: {dest}", file=sys.stderr)
+        return 1
     print(f"Downloaded: {dest} ({size_mb:.1f} MB)")
     return 0
 

@@ -190,7 +190,7 @@ static bool TestJsonVocabMatchesAscii() {
     AsciiTokenizer ascii_tok;
     JsonVocabTokenizer json_tok("models/tiny/vocab.json");
 
-    std::string prompt = "hello world!";
+    std::string prompt = "hello!";
     auto ascii_tokens = ascii_tok.Encode(prompt);
     auto json_tokens = json_tok.Encode(prompt);
 
