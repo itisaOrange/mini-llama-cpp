@@ -5,6 +5,4 @@ compile_commands.json
 __pycache__/
 *.pyc
 *.dSYM/
-*.gguf
-
 .claude/settings.local.json
